@@ -17,3 +17,5 @@ Example:
   "to": { "lat": 35.025413, "lon": 135.762124, "name": "京都御所" }
 }
 ```
+iOS互換性のためBase64はpercent-encodeしてはいけない。android版はpercent-encodeしてもなんかいける。
+https://d1vi1on7fqof1y.cloudfront.net/?<標準Base64をそのまま>
