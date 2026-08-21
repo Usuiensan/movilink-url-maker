@@ -135,7 +135,7 @@ function makeMovilinkUrl({ name, from, points }) {
   });
 
   const base64 = utf8ToBase64(parts.join("&"));
-  return MOVILINK_BASE + encodeURIComponent(base64);
+  return MOVILINK_BASE + base64;
 }
 
 function launchPageResponse(route, headOnly = false) {
@@ -180,7 +180,7 @@ function launchPageResponse(route, headOnly = false) {
       ${pointItems}
     </ul>
     <a class="open" href="${escapeHtml(target)}">moviLinkで開く</a>
-    <p class="note">ボタンを押すとmoviLinkのApp Linkを開きます。moviLinkがインストールされたAndroid端末で利用してください。</p>
+    <p class="note">ボタンを押すとmoviLinkのApp Linkを開きます。moviLinkがインストールされた端末で利用してください。</p>
   </main>
 </body>
 </html>`;
