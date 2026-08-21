@@ -22,5 +22,8 @@
   "homepage": "https://github.com/Usuiensan/movilink-url-maker#readme",
   "devDependencies": {
     "wrangler": "^4.125.0"
+  },
+  "dependencies": {
+    "qrcode-svg": "^1.1.0"
   }
 }

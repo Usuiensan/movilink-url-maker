@@ -50,12 +50,16 @@ test("GET /movilink shows a QR code for the direct moviLink URI", async () => {
 
   assert.equal(response.status, 200);
   const html = await response.text();
-  const qrUrl = html.match(/src="([^"]*api\.qrserver\.com[^"]*)"/)?.[1];
+  const qrDataUri = html.match(/src="(data:image\/svg\+xml;base64,[^"]+)"/)?.[1];
   const target = html.match(/href="(https:\/\/d1vi1on7fqof1y\.cloudfront\.net\/\?[^"]+)"/)?.[1];
 
-  assert.ok(qrUrl);
+  assert.ok(qrDataUri);
   assert.ok(target);
-  assert.equal(new URL(qrUrl).searchParams.get("data"), target);
+  assert.doesNotMatch(html, /api\.qrserver\.com/);
+  assert.match(
+    Buffer.from(qrDataUri.split(",")[1], "base64").toString("utf8"),
+    /^<\?xml[^>]*>\s*<svg[^>]*>/
+  );
   assert.equal(
     Buffer.from(target.slice(target.indexOf("?") + 1), "base64").toString("utf8"),
     "rpn=test&dest[0]_lat=35.1&dest[0]_lon=135.7&dest[0]_pn=京都"

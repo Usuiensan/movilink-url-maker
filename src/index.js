@@ -1,3 +1,5 @@
+import QRCode from "qrcode-svg";
+
 const MOVILINK_BASE =
   "https://d1vi1on7fqof1y.cloudfront.net/?";
 const PUBLIC_URL = "https://go.usuiensan.dev/movilink";
@@ -140,6 +142,7 @@ function makeMovilinkUrl({ name, from, points }) {
 
 function launchPageResponse(route, headOnly = false) {
   const target = makeMovilinkUrl(route);
+  const qrDataUri = makeQrDataUri(target);
   const routeName = escapeHtml(route.name);
   const departure = route.from
     ? escapeHtml(route.from.name)
@@ -180,7 +183,7 @@ function launchPageResponse(route, headOnly = false) {
       <li><span>出発地</span><strong>${departure}</strong></li>
       ${pointItems}
     </ul>
-    <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(target)}" alt="moviLink URIのQRコード" width="240" height="240" referrerpolicy="no-referrer">
+    <img class="qr" src="${qrDataUri}" alt="moviLink URIのQRコード" width="240" height="240">
     <a class="open" href="${escapeHtml(target)}">moviLinkで開く</a>
     <p class="note">QRコードを読み取ると、moviLinkのBase64 URIをそのまま開けます。moviLinkがインストールされた端末で利用してください。</p>
   </main>
@@ -190,12 +193,25 @@ function launchPageResponse(route, headOnly = false) {
   const headers = {
     "Content-Type": "text/html; charset=utf-8",
     "Cache-Control": "no-store",
-    "Content-Security-Policy": "default-src 'none'; img-src https://api.qrserver.com; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
   };
 
   return new Response(headOnly ? null : html, { status: 200, headers });
+}
+
+function makeQrDataUri(value) {
+  const svg = new QRCode({
+    content: value,
+    padding: 4,
+    width: 240,
+    height: 240,
+    color: "#000000",
+    background: "#ffffff",
+  }).svg();
+
+  return `data:image/svg+xml;base64,${utf8ToBase64(svg)}`;
 }
 
 function parsePoint(value) {
