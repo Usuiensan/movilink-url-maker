@@ -12,12 +12,15 @@ export default {
         return jsonResponse({ url: makePublicUrl(body) });
       }
 
-      if (url.pathname !== "/movilink" || request.method !== "GET") {
+      if (
+        url.pathname !== "/movilink" ||
+        (request.method !== "GET" && request.method !== "HEAD")
+      ) {
         return new Response("Not Found", { status: 404 });
       }
 
       const route = parseQueryRoute(url.searchParams);
-      return Response.redirect(makeMovilinkUrl(route), 302);
+      return launchPageResponse(route, request.method === "HEAD");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Invalid route";
 
@@ -135,6 +138,64 @@ function makeMovilinkUrl({ name, from, points }) {
   return MOVILINK_BASE + encodeURIComponent(base64);
 }
 
+function launchPageResponse(route, headOnly = false) {
+  const target = makeMovilinkUrl(route);
+  const routeName = escapeHtml(route.name);
+  const departure = route.from
+    ? escapeHtml(route.from.name)
+    : "現在地";
+  const pointItems = route.points
+    .map((point, index) => {
+      const label = index === route.points.length - 1 ? "目的地" : `経由地 ${index + 1}`;
+      return `<li><span>${label}</span><strong>${escapeHtml(point.name)}</strong></li>`;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>moviLinkでルートを開く</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 24px; background: Canvas; color: CanvasText; }
+    main { max-width: 560px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    .route-name { margin: 0 0 20px; opacity: .8; }
+    .route { margin: 0 0 24px; padding: 0; list-style: none; }
+    .route li { display: grid; grid-template-columns: 5.5rem 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
+    .route span { opacity: .65; }
+    .open { display: block; padding: 14px 18px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: 700; background: ButtonFace; color: ButtonText; border: 1px solid color-mix(in srgb, CanvasText 30%, transparent); }
+    .note { margin-top: 16px; font-size: .9rem; opacity: .7; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>moviLinkでルートを開く</h1>
+    <p class="route-name">${routeName}</p>
+    <ul class="route">
+      <li><span>出発地</span><strong>${departure}</strong></li>
+      ${pointItems}
+    </ul>
+    <a class="open" href="${escapeHtml(target)}">moviLinkで開く</a>
+    <p class="note">ボタンを押すとmoviLinkのApp Linkを開きます。moviLinkがインストールされたAndroid端末で利用してください。</p>
+  </main>
+</body>
+</html>`;
+
+  const headers = {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+  };
+
+  return new Response(headOnly ? null : html, { status: 200, headers });
+}
+
 function parsePoint(value) {
   const fields = value.split(",");
 
@@ -198,6 +259,15 @@ function utf8ToBase64(value) {
   }
 
   return btoa(binary);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function jsonResponse(body, status = 200) {
