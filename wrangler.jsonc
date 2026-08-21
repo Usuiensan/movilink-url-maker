@@ -1,0 +1,12 @@
+{
+  "name": "movilink-url-maker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-21",
+
+  "routes": [
+    {
+      "pattern": "go.usuiensan.dev",
+      "custom_domain": true
+    }
+  ]
+}
