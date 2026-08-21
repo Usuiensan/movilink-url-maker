@@ -167,7 +167,8 @@ function launchPageResponse(route, headOnly = false) {
     .route { margin: 0 0 24px; padding: 0; list-style: none; }
     .route li { display: grid; grid-template-columns: 5.5rem 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
     .route span { opacity: .65; }
-    .qr { display: block; width: min(240px, 100%); height: auto; margin: 24px auto; background: white; }
+    .qr { display: block; box-sizing: border-box; width: min(272px, 100%); height: auto; margin: 32px auto; padding: 16px; background: white; }
+    @media (prefers-color-scheme: dark) { .qr { filter: invert(1); } }
     .open { display: block; padding: 14px 18px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: 700; background: ButtonFace; color: ButtonText; border: 1px solid color-mix(in srgb, CanvasText 30%, transparent); }
     .note { margin-top: 16px; font-size: .9rem; opacity: .7; line-height: 1.5; }
   </style>
