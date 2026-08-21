@@ -2,7 +2,7 @@
 
 Cloudflare Worker for browser and GPT Action use.
 
-- `GET /movilink`: existing human-facing URL; redirects to moviLink.
+- `GET /movilink`: human-facing relay page with a direct moviLink URI and QR code.
 - `POST /api/movilink`: accepts structured JSON and returns `{ "url": "..." }`.
 
 The GPT Action schema is in [`openapi.yaml`](./openapi.yaml).

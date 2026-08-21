@@ -41,13 +41,24 @@ test("POST /api/movilink rejects invalid points", async () => {
   assert.match((await response.json()).error, /Invalid latitude/);
 });
 
-test("GET /movilink keeps the redirect flow", async () => {
+test("GET /movilink shows a QR code for the direct moviLink URI", async () => {
   const response = await worker.fetch(
     new Request(
       "https://go.usuiensan.dev/movilink?name=test&to=35.1,135.7,京都"
     )
   );
 
-  assert.equal(response.status, 302);
-  assert.match(response.headers.get("location"), /^https:\/\/d1vi1on7fqof1y\.cloudfront\.net\/\?/);
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const qrUrl = html.match(/src="([^"]*api\.qrserver\.com[^"]*)"/)?.[1];
+  const target = html.match(/href="(https:\/\/d1vi1on7fqof1y\.cloudfront\.net\/\?[^"]+)"/)?.[1];
+
+  assert.ok(qrUrl);
+  assert.ok(target);
+  assert.equal(new URL(qrUrl).searchParams.get("data"), target);
+  assert.equal(
+    Buffer.from(target.slice(target.indexOf("?") + 1), "base64").toString("utf8"),
+    "rpn=test&dest[0]_lat=35.1&dest[0]_lon=135.7&dest[0]_pn=京都"
+  );
+  assert.match(html, /moviLink URIのQRコード/);
 });

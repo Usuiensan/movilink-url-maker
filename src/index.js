@@ -167,6 +167,7 @@ function launchPageResponse(route, headOnly = false) {
     .route { margin: 0 0 24px; padding: 0; list-style: none; }
     .route li { display: grid; grid-template-columns: 5.5rem 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
     .route span { opacity: .65; }
+    .qr { display: block; width: min(240px, 100%); height: auto; margin: 24px auto; background: white; }
     .open { display: block; padding: 14px 18px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: 700; background: ButtonFace; color: ButtonText; border: 1px solid color-mix(in srgb, CanvasText 30%, transparent); }
     .note { margin-top: 16px; font-size: .9rem; opacity: .7; line-height: 1.5; }
   </style>
@@ -179,8 +180,9 @@ function launchPageResponse(route, headOnly = false) {
       <li><span>出発地</span><strong>${departure}</strong></li>
       ${pointItems}
     </ul>
+    <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(target)}" alt="moviLink URIのQRコード" width="240" height="240" referrerpolicy="no-referrer">
     <a class="open" href="${escapeHtml(target)}">moviLinkで開く</a>
-    <p class="note">ボタンを押すとmoviLinkのApp Linkを開きます。moviLinkがインストールされた端末で利用してください。</p>
+    <p class="note">QRコードを読み取ると、moviLinkのBase64 URIをそのまま開けます。moviLinkがインストールされた端末で利用してください。</p>
   </main>
 </body>
 </html>`;
@@ -188,7 +190,7 @@ function launchPageResponse(route, headOnly = false) {
   const headers = {
     "Content-Type": "text/html; charset=utf-8",
     "Cache-Control": "no-store",
-    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "Content-Security-Policy": "default-src 'none'; img-src https://api.qrserver.com; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
   };
