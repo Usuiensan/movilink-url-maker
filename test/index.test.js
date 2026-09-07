@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import worker from "../src/index.js";
+import { makeMapcode } from "../src/mapcode.js";
+import { makePlusCode } from "../src/pluscode.js";
 
 test("POST /api/movilink returns a usable public URL", async () => {
   const response = await worker.fetch(
@@ -41,10 +43,16 @@ test("POST /api/movilink rejects invalid points", async () => {
   assert.match((await response.json()).error, /Invalid latitude/);
 });
 
-test("GET /movilink shows a QR code for the direct moviLink URI", async () => {
+test("location codes are generated locally", () => {
+  assert.equal(makePlusCode(34.985849, 135.758767), "8Q6QXQP5+8G");
+  assert.equal(makeMapcode(34.985849, 135.758767), "7 526 791*92");
+  assert.equal(makeMapcode(0, 0), null);
+});
+
+test("GET /movilink shows location codes and a QR code for the direct moviLink URI", async () => {
   const response = await worker.fetch(
     new Request(
-      "https://go.usuiensan.dev/movilink?name=test&to=35.1,135.7,京都"
+      "https://go.usuiensan.dev/movilink?name=test&to=34.985849,135.758767,京都駅"
     )
   );
 
@@ -55,6 +63,8 @@ test("GET /movilink shows a QR code for the direct moviLink URI", async () => {
 
   assert.ok(qrDataUri);
   assert.ok(target);
+  assert.match(html, /Plus Code: 8Q6QXQP5\+8G/);
+  assert.match(html, /MAPCODE: 7 526 791\*92/);
   assert.doesNotMatch(html, /api\.qrserver\.com/);
   assert.match(
     Buffer.from(qrDataUri.split(",")[1], "base64").toString("utf8"),
@@ -62,7 +72,7 @@ test("GET /movilink shows a QR code for the direct moviLink URI", async () => {
   );
   assert.equal(
     Buffer.from(target.slice(target.indexOf("?") + 1), "base64").toString("utf8"),
-    "rpn=test&dest[0]_lat=35.1&dest[0]_lon=135.7&dest[0]_pn=京都"
+    "rpn=test&dest[0]_lat=34.985849&dest[0]_lon=135.758767&dest[0]_pn=京都駅"
   );
   assert.match(html, /moviLink URIのQRコード/);
 });
