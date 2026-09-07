@@ -1,4 +1,6 @@
 import QRCode from "qrcode-svg";
+import { makeMapcode } from "./mapcode.js";
+import { makePlusCode } from "./pluscode.js";
 
 const MOVILINK_BASE =
   "https://d1vi1on7fqof1y.cloudfront.net/?";
@@ -150,7 +152,12 @@ function launchPageResponse(route, headOnly = false) {
   const pointItems = route.points
     .map((point, index) => {
       const label = index === route.points.length - 1 ? "目的地" : `経由地 ${index + 1}`;
-      return `<li><span>${label}</span><strong>${escapeHtml(point.name)}</strong></li>`;
+      const { plusCode, mapcode } = locationCodes(point);
+      const codeLines = [
+        plusCode ? `<small>Plus Code: ${escapeHtml(plusCode)}</small>` : "",
+        mapcode ? `<small>MAPCODE: ${escapeHtml(mapcode)}</small>` : "",
+      ].join("");
+      return `<li><span>${label}</span><div><strong>${escapeHtml(point.name)}</strong>${codeLines}</div></li>`;
     })
     .join("");
 
@@ -170,6 +177,8 @@ function launchPageResponse(route, headOnly = false) {
     .route { margin: 0 0 24px; padding: 0; list-style: none; }
     .route li { display: grid; grid-template-columns: 5.5rem 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
     .route span { opacity: .65; }
+    .route strong, .route small { display: block; }
+    .route small { margin-top: 4px; font-family: ui-monospace, monospace; font-size: .85rem; opacity: .75; }
     .qr { display: block; box-sizing: border-box; width: min(272px, 100%); height: auto; margin: 32px auto; padding: 16px; background: white; }
     .open { display: block; padding: 14px 18px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: 700; background: ButtonFace; color: ButtonText; border: 1px solid color-mix(in srgb, CanvasText 30%, transparent); }
     .note { margin-top: 16px; font-size: .9rem; opacity: .7; line-height: 1.5; }
@@ -186,6 +195,7 @@ function launchPageResponse(route, headOnly = false) {
     <img class="qr" src="${qrDataUri}" alt="moviLink URIのQRコード" width="240" height="240">
     <a class="open" href="${escapeHtml(target)}">moviLinkで開く</a>
     <p class="note">QRコードを読み取ると、moviLinkのBase64 URIをそのまま開けます。moviLinkがインストールされた端末で利用してください。</p>
+    <p class="note">「マップコード」および「MAPCODE」は(株)デンソーの登録商標です。</p>
   </main>
 </body>
 </html>`;
@@ -199,6 +209,21 @@ function launchPageResponse(route, headOnly = false) {
   };
 
   return new Response(headOnly ? null : html, { status: 200, headers });
+}
+
+function locationCodes(point) {
+  let plusCode = null;
+  let mapcode = null;
+
+  try {
+    plusCode = makePlusCode(point.lat, point.lon);
+  } catch {}
+
+  try {
+    mapcode = makeMapcode(point.lat, point.lon);
+  } catch {}
+
+  return { plusCode, mapcode };
 }
 
 function makeQrDataUri(value) {
