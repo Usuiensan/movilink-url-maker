@@ -1,4 +1,6 @@
 import QRCode from "qrcode-svg";
+import { OpenLocationCode } from "open-location-code";
+import { encodeToShortest, Territory } from "mapcode-ts";
 
 const MOVILINK_BASE =
   "https://d1vi1on7fqof1y.cloudfront.net/?";
@@ -150,7 +152,8 @@ function launchPageResponse(route, headOnly = false) {
   const pointItems = route.points
     .map((point, index) => {
       const label = index === route.points.length - 1 ? "目的地" : `経由地 ${index + 1}`;
-      return `<li><span>${label}</span><strong>${escapeHtml(point.name)}</strong></li>`;
+      const codes = getLocationCodes(point);
+      return `<li><span>${label}</span><strong>${escapeHtml(point.name)}</strong><small>Plus Code: ${escapeHtml(codes.plusCode)}<br>MAPCODE: ${escapeHtml(codes.mapcode)}</small></li>`;
     })
     .join("");
 
@@ -212,6 +215,25 @@ function makeQrDataUri(value) {
   }).svg();
 
   return `data:image/svg+xml;base64,${utf8ToBase64(svg)}`;
+}
+
+function getLocationCodes(point) {
+  try {
+    return {
+      plusCode: new OpenLocationCode().encode(
+        Number(point.lat),
+        Number(point.lon)
+      ),
+      mapcode:
+        encodeToShortest(
+          Number(point.lat),
+          Number(point.lon),
+          Territory.JPN
+        )?.getCodeWithTerritory() ?? "算出できません",
+    };
+  } catch {
+    return { plusCode: "算出できません", mapcode: "算出できません" };
+  }
 }
 
 function parsePoint(value) {
