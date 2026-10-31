@@ -24,6 +24,8 @@
     "wrangler": "^4.125.0"
   },
   "dependencies": {
+    "mapcode-ts": "^1.0.1",
+    "open-location-code": "^1.0.3",
     "qrcode-svg": "^1.1.0"
   }
 }

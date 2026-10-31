@@ -66,3 +66,38 @@ test("GET /movilink shows a QR code for the direct moviLink URI", async () => {
   );
   assert.match(html, /moviLink URIのQRコード/);
 });
+
+test("GET /movilink shows Plus Codes and MAPCODEs for vias and destination without changing the moviLink URI", async () => {
+  const response = await worker.fetch(
+    new Request(
+      "https://go.usuiensan.dev/movilink?name=test&via=34.985849,135.758767,京都駅&to=35.025413,135.762124,京都御所"
+    )
+  );
+
+  const html = await response.text();
+  const points = html.match(/<li><span>(?:経由地 1|目的地)<\/span>.*?<\/li>/g);
+
+  assert.equal(points?.length, 2);
+  for (const point of points) {
+    assert.match(point, /Plus Code: [A-Z0-9]{4,8}\+[A-Z0-9]{2,3}/);
+    assert.match(point, /MAPCODE: JPN [A-Z0-9.]+/);
+  }
+
+  const target = html.match(/href="(https:\/\/d1vi1on7fqof1y\.cloudfront\.net\/?\?[^\"]+)"/)?.[1];
+  assert.ok(target);
+  assert.equal(
+    Buffer.from(target.slice(target.indexOf("?") + 1), "base64").toString("utf8"),
+    "rpn=test&dest[0]_lat=34.985849&dest[0]_lon=135.758767&dest[0]_pn=京都駅&dest[1]_lat=35.025413&dest[1]_lon=135.762124&dest[1]_pn=京都御所"
+  );
+});
+
+test("GET /movilink still returns a moviLink URL when a Japan MAPCODE is unavailable", async () => {
+  const response = await worker.fetch(
+    new Request("https://go.usuiensan.dev/movilink?to=40,-100,Denver")
+  );
+
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(html, /MAPCODE: 算出できません/);
+  assert.match(html, /href="https:\/\/d1vi1on7fqof1y\.cloudfront\.net\//);
+});
